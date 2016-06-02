@@ -399,3 +399,19 @@ func (n *chainnode) Elapsed(field string, unit time.Duration) *InfluxQLNode {
 	n.linkChild(i)
 	return i
 }
+
+// Compute the holt-winters forecast of a data set.
+func (n *chainnode) HoltWinters(field string, h, m int64, interval time.Duration, includeFitData bool) *InfluxQLNode {
+	i := newInfluxQLNode("holt_winters", field, n.Provides(), BatchEdge, ReduceCreater{
+		CreateFloatReducer: func() (influxql.FloatPointAggregator, influxql.FloatPointEmitter) {
+			fn := influxql.NewFloatHoltWintersReducer(int(h), int(m), includeFitData, interval)
+			return fn, fn
+		},
+		CreateIntegerFloatReducer: func() (influxql.IntegerPointAggregator, influxql.FloatPointEmitter) {
+			fn := influxql.NewFloatHoltWintersReducer(int(h), int(m), includeFitData, interval)
+			return fn, fn
+		},
+	})
+	n.linkChild(i)
+	return i
+}
